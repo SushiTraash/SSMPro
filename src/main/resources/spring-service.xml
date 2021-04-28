@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+         http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+         http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!--  1.扫描包下注解@component  -->
+    <context:component-scan base-package="com.ssm.service"/>
+
+<!-- 2.注入service业务类 -->
+    <bean id="BookServiceImpl" class="com.ssm.service.BookServiceImpl">
+        <!--SetBooksMapper方法的名字 name 是booksMapper     要注入的ref是dao层的BooksMapper   -->
+        <property name="booksMapper" ref="booksMapper"/><!--这行用于注入-->
+    </bean>
+    <!--3.配置事务管理器，注入数据源-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--注入数据源        -->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+<!--    4. aop 事务支持-->
+    <!-- 结合AOP实现事务 切面切入   -->
+    <!-- 配置事务通知advice  -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <!--配置哪些方法使用什么样的事务,配置事务的传播特性-->
+            <tx:method name="*" propagation="REQUIRED"/>
+
+        </tx:attributes>
+    </tx:advice>
+
+    <!--配置aop 织入事务    -->
+    <aop:config>
+        <aop:pointcut id="txPoi" expression="execution(* com.ssm.dao.*.* (..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPoi"/>
+    </aop:config>
+</beans>
